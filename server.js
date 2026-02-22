@@ -212,3 +212,101 @@ app.listen(PORT, () => {
   console.log(`✍️  Buddha Sales Engine running on port ${PORT}`);
   console.log(`📰 Writer's Engine: 10 publications ready (Sonnet + Haiku)`);
 });
+
+// ─── CRON JOBS ─────────────────────────────────────────────────────────────
+const cron = require('node-cron');
+const axios = require('axios');
+
+// SMM-1: Daily Magazine Outreach — runs at 8 AM ET (contacts 7+ days after prayer)
+cron.schedule('0 13 * * *', async () => {
+  console.log('[CRON] SMM-1: Daily Magazine Outreach — 8 AM ET');
+  try {
+    const GHL_TOKEN = process.env.GHL_API_KEY;
+    const GHL_LOC = process.env.GHL_LOCATION_ID;
+    const GHL_HEADERS = { Authorization: `Bearer ${GHL_TOKEN}`, Version: '2021-07-28' };
+    
+    // Get contacts tagged bdt-lead but NOT smm-contacted
+    // prayer_sent_date 7+ days ago
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    const res = await axios.get(
+      `https://services.leadconnectorhq.com/contacts/?locationId=${GHL_LOC}&tags=bdt-lead&limit=50`,
+      { headers: GHL_HEADERS }
+    );
+    
+    const contacts = (res.data?.contacts || []).filter(c => {
+      const prayerDate = c.customFields?.find(f => f.key === 'contact.prayer_sent_date')?.value;
+      const hasSmm = c.tags?.includes('smm-contacted');
+      const brandTag = c.customFields?.find(f => f.key === 'contact.brand_tag')?.value;
+      return !hasSmm && prayerDate && prayerDate <= sevenDaysAgo && brandTag;
+    });
+    
+    console.log(`[SMM-1] ${contacts.length} contacts eligible for magazine outreach`);
+    
+    for (const contact of contacts.slice(0, 30)) { // Max 30/day to start
+      const brandTag = contact.customFields?.find(f => f.key === 'contact.brand_tag')?.value || 'business2';
+      try {
+        await axios.post('http://localhost:3001/smm/outreach', {
+          contactId: contact.id,
+          businessName: contact.companyName || contact.name,
+          businessCity: contact.city,
+          businessState: contact.state,
+          businessType: contact.customFields?.find(f => f.key === 'contact.business_type')?.value || 'Business',
+          brandTag
+        });
+        await new Promise(r => setTimeout(r, 2000)); // 2s delay between sends
+      } catch (e) {
+        console.error(`[SMM-1] Error for contact ${contact.id}:`, e.message);
+      }
+    }
+    
+    console.log('[SMM-1] Daily magazine outreach complete');
+  } catch (err) {
+    console.error('[CRON SMM-1] Error:', err.message);
+  }
+}, { timezone: 'America/New_York' });
+
+// SMM-4: Daily Content Engine — runs at 6 AM ET
+cron.schedule('0 11 * * *', async () => {
+  console.log('[CRON] SMM-4: Daily Content Engine — 6 AM ET');
+  const BRANDS = ['smart-money', 'gourmet', 'ladies-home', 'blender', 'modern-bride', 'family-circle', 'teen-people'];
+  
+  for (const brand of BRANDS) {
+    try {
+      const res = await axios.post('http://localhost:3001/writers-engine/article', {
+        publication: brand,
+        articleType: 'news',
+        topic: `Latest trends and insights for ${brand} readers`,
+        wordCount: '600-800'
+      });
+      
+      if (res.data?.success) {
+        console.log(`[SMM-4] Article generated for ${brand}: ${res.data.article?.title}`);
+        if (process.env.DISCORD_SMM_CONTENT_WEBHOOK) {
+          await axios.post(process.env.DISCORD_SMM_CONTENT_WEBHOOK, {
+            content: `📰 **Article Generated: ${res.data.article?.title}**\n📖 Brand: ${brand}\n📊 Words: ~${res.data.article?.wordCount}`
+          });
+        }
+      }
+      await new Promise(r => setTimeout(r, 5000)); // 5s between articles
+    } catch (e) {
+      console.error(`[SMM-4] Error for ${brand}:`, e.message);
+    }
+  }
+  
+  console.log('[SMM-4] Daily content engine complete');
+}, { timezone: 'America/New_York' });
+
+// BDT-6 + SMM-5: Daily Reports — runs at 9 AM ET
+cron.schedule('0 14 * * *', async () => {
+  console.log('[CRON] Daily Reports — 9 AM ET');
+  try {
+    await axios.get('http://localhost:3001/bdt/daily-report').catch(e => console.error('BDT report err:', e.message));
+    await axios.get('http://localhost:3001/smm/daily-report').catch(e => console.error('SMM report err:', e.message));
+  } catch (err) {
+    console.error('[CRON Reports] Error:', err.message);
+  }
+}, { timezone: 'America/New_York' });
+
+console.log('⏰ Cron: SMM outreach 8AM, Content Engine 6AM, Reports 9AM (all ET)');
+// ─────────────────────────────────────────────────────────────────────────────
