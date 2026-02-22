@@ -177,6 +177,13 @@ app.post("/calendar/monthly", async (req, res) => {
 // Article types: news, feature, profile, industry-seo
 // Models: Sonnet (editorial), Haiku (bulk SEO/industry)
 
+// SMM Handlers (magazine outreach, reply classification, featured fulfillment)
+const { generateMagazineOutreach, classifySMMReply, fulfillFeaturedPurchase, generateSMMDailyReport } = require('./api/smm-handlers');
+app.post("/smm/outreach", generateMagazineOutreach);        // SMM-1: Send magazine pitch
+app.post("/smm/classify-reply", classifySMMReply);          // SMM-2: Classify reply → route
+app.post("/smm/fulfill-featured", fulfillFeaturedPurchase); // SMM-3: Claude Sonnet editorial profile
+app.get("/smm/daily-report", generateSMMDailyReport);       // SMM-5: Discord daily report
+
 app.get("/writers-engine/publications", listPublications);
 
 app.post("/writers-engine/article", async (req, res) => {
