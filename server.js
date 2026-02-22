@@ -184,6 +184,10 @@ app.post("/smm/classify-reply", classifySMMReply);          // SMM-2: Classify r
 app.post("/smm/fulfill-featured", fulfillFeaturedPurchase); // SMM-3: Claude Sonnet editorial profile
 app.get("/smm/daily-report", generateSMMDailyReport);       // SMM-5: Discord daily report
 
+// Business 2.0 Self-Service Portal — $50 listing → AI article → 6 ad positions
+const { createBusiness2Listing } = require('./api/business2-portal');
+app.post("/business2/create", createBusiness2Listing);      // $50/$100/$250/$500 tiers
+
 app.get("/writers-engine/publications", listPublications);
 
 app.post("/writers-engine/article", async (req, res) => {
