@@ -22,7 +22,7 @@ Voice calibration: ${voiceGuide}
 Return JSON: { subject, body, cta_text, cta_link, voice_ratio: { cardone, hormozi, buddhist } }`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-haiku-4-5-20251001",  // HAIKU: high-volume CRM emails
     max_tokens: 2000,
     system: SALES_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }]
@@ -41,7 +41,7 @@ Platform notes: ${platformNotes(platform)}
 Return JSON: { post_text, hashtags, best_time, visual_brief, cta }`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",  // SONNET: quality creative content,
     max_tokens: 1500,
     system: SALES_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }]
@@ -60,7 +60,7 @@ Angle: ${angle} — ${angleGuide(angle)}
 Return JSON array of 3 ads: [{ headline, primary_text, description, cta_button, visual_brief }]`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-haiku-4-5-20251001",  // HAIKU: high-volume short-form,
     max_tokens: 2000,
     system: SALES_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }]
@@ -85,7 +85,7 @@ For each day, generate posts for Facebook AND Instagram.
 Return JSON: { days: [{ day, pillar, facebook: { post, hashtags, visual_brief, best_time }, instagram: { post, hashtags, visual_brief, best_time } }] }`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",  // SONNET: quality creative content,
     max_tokens: 4000,
     system: SALES_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }]
@@ -101,7 +101,7 @@ Topic: ${topic}
 Return JSON: { hook, body_sections: [{ timestamp, script, visual_note }], cta, hashtags }`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-sonnet-4-6",  // SONNET: quality creative content,
     max_tokens: 2000,
     system: SALES_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }]
@@ -120,7 +120,7 @@ Template ID: ${templateId || "auto-suggest"}
 Return JSON: { design_dimensions, background_suggestion, text_hierarchy: [], color_palette: [], image_suggestions: [], mood }`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-20250514",
+    model: "claude-haiku-4-5-20251001",  // HAIKU: high-volume short-form,
     max_tokens: 1000,
     system: SALES_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }]
