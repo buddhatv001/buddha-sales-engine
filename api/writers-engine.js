@@ -79,7 +79,7 @@ OUTPUT RULES:
 const VOICE_CONFIGS = {
   "wiki-news": {
     name: "Wiki News Network",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Wiki News Network (200+ newspapers)
 VOICE: Authoritative daily journalism. Think Associated Press meets Bloomberg. Clean, direct, factual with enough narrative flair to keep readers engaged. Every story answers: What happened? Why does it matter? What happens next?
 TONE: Confident, informed, civic-minded.
@@ -88,7 +88,7 @@ SPECIAL RULES: Always include at least one local angle or community impact. Incl
   },
   "smart-money": {
     name: "Smart Money Magazine",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Smart Money Magazine
 VOICE: Bloomberg meets Black Enterprise. Sophisticated financial journalism for entrepreneurs and investors building generational wealth.
 TONE: Sharp, knowing, occasionally irreverent.
@@ -97,7 +97,7 @@ SPECIAL RULES: Always include actionable intelligence — numbers, strategies, o
   },
   "gourmet": {
     name: "Gourmet Magazine",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Gourmet Magazine
 VOICE: The New Yorker meets Bon Appetit at its peak. Literate food writing that treats cuisine as culture, not content.
 TONE: Sensual, precise, curious.
@@ -106,7 +106,7 @@ SPECIAL RULES: Engage at least three senses in every piece. Name specific ingred
   },
   "ladies-home": {
     name: "Ladies' Home Journal",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Ladies' Home Journal
 VOICE: Modern, authoritative lifestyle journalism. Think The Cut meets Real Simple. Smart women talking to smart women.
 TONE: Warm but direct. Like your most accomplished friend who gives you the real answer.
@@ -115,7 +115,7 @@ SPECIAL RULES: Lead with utility. Include expert sources by name and credential.
   },
   "blender": {
     name: "Blender Magazine",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Blender Magazine
 VOICE: Rolling Stone meets Complex meets Pitchfork. Music journalism that understands artists as business operators, cultural forces, and human beings.
 TONE: Culturally fluent, opinionated, alive.
@@ -124,7 +124,7 @@ SPECIAL RULES: Reference specific songs, albums, and cultural moments. Connect m
   },
   "modern-bride": {
     name: "Modern Bride Magazine",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Modern Bride Magazine
 VOICE: Vogue Weddings meets The Knot editorial at its most sophisticated. Aspirational but grounded.
 TONE: Elegant, practical, inclusive.
@@ -133,7 +133,7 @@ SPECIAL RULES: Include specific price ranges and vendor context. Feature diverse
   },
   "family-circle": {
     name: "Family Circle Magazine",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Family Circle Magazine
 VOICE: Real Simple meets The Atlantic's family coverage. Smart, evidence-based family journalism.
 TONE: Supportive without being saccharine. Like a pediatrician who also happens to be funny.
@@ -142,7 +142,7 @@ SPECIAL RULES: Cite actual research. Include age-specific guidance. Acknowledge 
   },
   "teen-people": {
     name: "Teen People Magazine",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Teen People Magazine
 VOICE: Teen Vogue at its most culturally relevant. Smart youth journalism that treats young readers as informed, aware, sophisticated.
 TONE: Energetic, genuine, current.
@@ -151,7 +151,7 @@ SPECIAL RULES: Stay current with platform culture (TikTok, YouTube, Discord, gam
   },
   "buddha-tv": {
     name: "Buddha TV / BDT Media",
-    model: "claude-sonnet-4-6",
+    model: "claude-haiku-4-5-20251001"  // HAIKU: bulk daily content ($1/$5 MTok vs $3/$15),
     config: `PUBLICATION: Buddha TV / Buddha Digital Temple Media
 VOICE: Spirituality meets 60 Minutes. Serious, respectful coverage of spiritual practices, interfaith dialogue, and consciousness research.
 TONE: Reverent but journalistic. Reporting on one of the most important dimensions of human experience.
@@ -218,7 +218,12 @@ async function generateArticle(req, res) {
   try {
     const response = await client.messages.create({
       model,
-      max_tokens: articleType === "industry-seo" ? 1200 : 4096,
+      // Cap tokens by article type — avoids runaway generation costs
+      max_tokens: articleType === "industry-seo" ? 1200
+        : articleType === "news" ? 1500       // 600-900 words = ~900-1200 tokens, 1500 is safe ceiling
+        : articleType === "feature" ? 3000    // Features 1,500-3,000 words
+        : articleType === "profile" ? 3000    // Profiles 1,500-2,500 words
+        : 2000,                               // Default safe ceiling
       system: [
         {
           type: "text",

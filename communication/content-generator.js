@@ -41,7 +41,7 @@ Platform notes: ${platformNotes(platform)}
 Return JSON: { post_text, hashtags, best_time, visual_brief, cta }`;
 
   const response = await client.messages.create({
-    model: "claude-sonnet-4-6",  // SONNET: quality creative content,
+    model: "claude-haiku-4-5-20251001",  // HAIKU: video scripts benefit from speed over prestige
     max_tokens: 1500,
     system: SALES_SYSTEM_PROMPT,
     messages: [{ role: "user", content: prompt }]
