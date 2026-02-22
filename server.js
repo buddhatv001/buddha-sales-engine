@@ -12,6 +12,7 @@ const {
   generateVideoScript,
   generateCanvaBrief
 } = require("./communication/content-generator");
+const { generateArticle, qualityCheck, listPublications } = require("./api/writers-engine");
 
 const app = express();
 app.use(express.json({ limit: "5mb" }));
@@ -85,7 +86,10 @@ app.get("/", (req, res) => {
       "POST /generate/canva-brief",
       "POST /calendar/weekly",
       "POST /calendar/monthly",
-      "GET  /swipe-file"
+      "GET  /swipe-file",
+      "POST /writers-engine/article  — generate NYT-quality article for any BDT publication",
+      "POST /writers-engine/quality-check  — AI editor QC pass/fail check",
+      "GET  /writers-engine/publications  — list all 10 publications + model config"
     ]
   });
 });
@@ -166,7 +170,34 @@ app.post("/calendar/monthly", async (req, res) => {
   }
 });
 
+// ─── WRITER'S ENGINE — 10 BDT Publications ────────────────────────────────────
+// NYT/Bloomberg-quality journalism AI for the full BDT media empire
+// Publications: wiki-news, smart-money, gourmet, ladies-home, blender,
+//               modern-bride, family-circle, teen-people, buddha-tv, industry
+// Article types: news, feature, profile, industry-seo
+// Models: Sonnet (editorial), Haiku (bulk SEO/industry)
+
+app.get("/writers-engine/publications", listPublications);
+
+app.post("/writers-engine/article", async (req, res) => {
+  try {
+    await generateArticle(req, res);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+app.post("/writers-engine/quality-check", async (req, res) => {
+  try {
+    await qualityCheck(req, res);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+// ─────────────────────────────────────────────────────────────────────────────
+
 const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`✍️  Buddha Sales Engine running on port ${PORT}`);
+  console.log(`📰 Writer's Engine: 10 publications ready (Sonnet + Haiku)`);
 });
